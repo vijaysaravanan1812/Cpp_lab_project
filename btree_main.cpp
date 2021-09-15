@@ -7,65 +7,75 @@ using namespace std;
 // Driver program to test above functions
 int main()
 {
-	Btree <int>t(3); // A B-Tree with minium degree 3
+	system("clear");
+	Btree <int> t; // A B-Tree with minium degree 3
 
-	t.insert(1);
-	t.insert(3);
-	t.insert(7);
-	t.insert(10);
-	t.insert(11);
-	t.insert(13);
-	t.insert(14);
-	t.insert(15);
-	t.insert(18);
-	t.insert(16);
-	t.insert(19);
-	t.insert(24);
-	t.insert(25);
-	t.insert(26);
-	t.insert(21);
-	t.insert(4);
-	t.insert(5);
-	t.insert(20);
-	t.insert(22);
-	t.insert(2);
-	t.insert(17);
-	t.insert(12);
-	t.insert(6);
+	int count = 1; 
+	while (count)
+	{
+		system("clear");
+		int choice;
+		printf("Insert - 1 \tDisplay -2 \tRemove -3 \tEdit -4\n");
+		
+		cin>>choice;
+		if (choice == 1)
+		{
+			int time;
+			
+			printf("How Many records you need to insert\t");
+			cin>>time;
+			for (int i = 1; i <= time; i++)
+			{		
+				int roll_no;   
+				printf("Roll Number should be Unique\nStudent %d roll number \t",i);
+				cin>>roll_no;
+				t.insert(roll_no);
+			}
+			
+		}
+		else if (choice == 2)
+		{
+			t.traverse();
+			getchar();
+		}
+		else if (choice == 3)
+		{
+			int roll_no;
+			printf("Enter roll no to remove that record\t");
+			cin>>roll_no;
+			t.remove(roll_no);
+			
+		}
+		else if (choice == 4)
+		{
+			int roll_no;
+			printf("Enter Old Roll_Number\t");
+			cin>>roll_no;
+			t.search(roll_no);
+		}
+		else
+		{
+			char ch;
+			printf("\t\t<><><><><><><><><><><><><><><><>\n");
+			printf("\t\t| Are you sure do want to exix |\n");
+			printf("\t\t<><><><><><><><><><><><><><><><>\n");
+			printf("\t\t|%-30s|\n","   Yes - y/Y  |  No - n/N  ");
+			printf("\t\t<><><><><><><><><><><><><><><><>\n\t\t");
+			cin>>ch;
+			if (ch == 'Y' || ch == 'y')
+				count = 0;
+			else if(ch == 'n' || ch == 'N')
+				count = 1;
+			else
+			{
+				printf("Invalid Input!!\n");
+				getchar();
+			}
+		}
 
-	cout << "Traversal of tree constructed is\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(6);
-	cout << "Traversal of tree after removing 6\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(13);
-	cout << "Traversal of tree after removing 13\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(7);
-	cout << "Traversal of tree after removing 7\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(4);
-	cout << "Traversal of tree after removing 4\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(2);
-	cout << "Traversal of tree after removing 2\n";
-	t.traverse();
-	cout << endl;
-
-	t.remove(16);
-	cout << "Traversal of tree after removing 16\n";
-	t.traverse();
-	cout << endl;
-
+		getchar();
+		
+	}
+	
 	return 0;
 }

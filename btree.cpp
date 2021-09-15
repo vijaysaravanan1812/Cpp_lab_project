@@ -1,19 +1,41 @@
 
+#include<iomanip>
 #include<iostream>
+#include<cstring>
 #include"btree.h"
 
 using namespace std;
+
+int S_no=1;
 
 template <typename T>
 void Btree<T>::insert(T k)
 {
     insert(k,root);
 }
-
+ 
 template <typename T>
 void Btree<T>::traverse()
 {
-    traverse(root);
+    if (root == NULL)
+	{
+		printf("\t\t<><><><><><><><><><><>\n");
+		printf("\t\t| No record to show  |\n");
+		printf("\t\t<><><><><><><><><><><>\n");
+	}
+	else
+	{
+		S_no = 1;
+		
+		char s_no[10] = "S Number";
+		char roll_no[40] = "Roll Number";
+		char name[40] = "Name";
+		char phone_no[40] = "Phone Number";
+		cout<<setfill('-')<<setw(139)<<"\n";
+		printf("|%10s||%40s||%40s||%40s|\n",s_no,roll_no,name,phone_no);
+		cout<<setfill('-')<<setw(139)<<"\n";
+		traverse(root);
+	}
 }
 
 // The main function that inserts a new key in this B-Tree
@@ -26,6 +48,7 @@ void Btree<T>::insert(T k , node *& root)
         // Allocate memory for root
         root = new node(t, true);
         root->keys[0] = k;  // Insert key
+		root->data[0].get();
         root->n = 1;  // Update number of keys in root
     }
     else // If tree is not empty
@@ -68,8 +91,10 @@ void Btree<T>::split_child(int i , node *& y, node *& x)
 
     // Copy the last (t-1) keys of y to z
     for (int j = 0; j < t-1; j++)
+	{
         z->keys[j] = y->keys[j+t];
-  
+		z->data[j] = y->data[j+t];
+	}
     // Copy the last t children of y to z
     if (y->leaf == false)
     {
@@ -95,11 +120,13 @@ void Btree<T>::split_child(int i , node *& y, node *& x)
     // A key of y will move to this node. Find the location of
     // new key and move all greater keys one space ahead
     for (int j = x->n-1; j >= i; j--)
+	{
         x->keys[j+1] = x->keys[j];
-  
+		x->data[j+1] = x->data[j]; 
+	}
     // Copy the middle key of y to this node
     x->keys[i] = y->keys[t-1];
-  
+	x->data[i] = y->data[t-1];
     // Increment count of keys in this node
     x->n = x->n + 1;
 
@@ -122,11 +149,13 @@ void Btree<T>::insert_not_full(T k, node *& x)
         while (i >= 0 && x->keys[i] > k)
         {
             x->keys[i+1] = x->keys[i];
+			x->data[i+1] = x->data[i];
             i--;
         }
   
         // Insert the new key at found location
         x->keys[i+1] = k;
+		x->data[i+1].get();
         x->n = x->n+1;
     }
     else // If this node is not leaf
@@ -159,14 +188,16 @@ void Btree<T>::traverse(node *&root)
 {
         // There are n keys and n+1 children, traverse through n keys
         // and first n children
-        int i;
+		int i;
+
         for (i = 0; i < root->n; i++)
         {
             // If this is not leaf, then before printing key[i],
             // traverse the subtree rooted with child C[i].
             if (root->leaf == false)
                 traverse(root->C[i]);
-            cout << " " << root->keys[i];
+			printf("|%10d||%40d||%40s||%40ld|\n",S_no++,root->keys[i],root->data[i].name,root->data[i].phone_no);
+			cout<<setfill('-')<<setw(139)<<"\n";
         }
   
         // Print the subtree rooted with last child
@@ -182,9 +213,12 @@ void Btree<T>::traverse(node *&root)
 template <typename T>
 void Btree<T>::remove(T k)
 {
-	if (!root)
+	if (root == NULL)
 	{
-		cout << "The tree is empty\n";
+		printf("\t\t<><><><><><><><><><><>\n");
+		cout << "\t\t| Nothing To Delete! |\n";
+		printf("\t\t<><><><><><><><><><><>\n");
+		getchar();
 		return;
 	}
 
@@ -230,7 +264,10 @@ void Btree<T>::remove(T k, node *& root)
 		// If this node is a leaf node, then the key is not present in tree
 		if (root->leaf)
 		{
-			cout << "The key "<< k <<" is does not exist in the tree\n";
+			cout<<"\t\t"<<setfill('-')<<setw(40 + count_digit(k))<<"\n";
+			cout << "\t\t| The Roll Number "<< k <<" is does not exist  |\n";
+			cout<<"\t\t"<<setfill('-')<<setw(40 + count_digit(k))<<"\n";			
+			getchar();
 			return;
 		}
 
@@ -274,8 +311,10 @@ void Btree<T>::removeFromLeaf(int idx,node *& root)
 
 	// Move all the keys after the idx-th pos one place backward
 	for (int i=idx+1; i< root->n; ++i)
+	{
 		root->keys[i-1] = root->keys[i];
-
+		root->data[i-1] = root->data[i];
+	}
 	// Reduce the count of keys
 	root->n--;
 
@@ -295,8 +334,10 @@ void Btree<T>::removeFromNonLeaf(int idx, node *& root)
 	// in C[idx]
 	if (root->C[idx]->n >= t)
 	{
-		int pred = getPred(idx, root);
+		node *temp;
+		int pred = getPred(idx, root, temp);
 		root->keys[idx] = pred;
+		root->data[idx] = temp->data[temp->n -1];
 		remove(pred,root->C[idx]);
 	}
 
@@ -307,8 +348,10 @@ void Btree<T>::removeFromNonLeaf(int idx, node *& root)
 	// Recursively delete succ in C[idx+1]
 	else if ((root->C[idx+1])->n >= t)
 	{
-		int succ = getSucc(idx,root);
+		node *temp;
+		int succ = getSucc(idx,root,temp);
 		root->keys[idx] = succ;
+		root->data[idx] = temp->data[0];
 		remove(succ,root->C[idx+1]);
 	}
 
@@ -326,7 +369,7 @@ void Btree<T>::removeFromNonLeaf(int idx, node *& root)
 
 template <typename T>
 // A function to get predecessor of keys[idx]
-int Btree<T>::getPred(int idx, node *& root)
+int Btree<T>::getPred(int idx, node *& root, node *& temp)
 {
 	// Keep moving to the right most node until we reach a leaf
 	node *cur   =  root->C[idx];
@@ -334,11 +377,12 @@ int Btree<T>::getPred(int idx, node *& root)
 		cur = cur->C[cur->n];
 
 	// Return the last key of the leaf
+	temp = cur;
 	return cur->keys[cur->n-1];
 }
 
 template <typename T>
-int Btree<T>::getSucc(int idx, node *& root)
+int Btree<T>::getSucc(int idx, node *& root, node *& temp)
 {
 
 	// Keep moving the left most node starting from C[idx+1] until we reach a leaf
@@ -347,6 +391,7 @@ int Btree<T>::getSucc(int idx, node *& root)
 		cur = cur->C[0];
 
 	// Return the first key of the leaf
+	temp = cur;
 	return cur->keys[0];
 }
 
@@ -361,11 +406,14 @@ void Btree<T>::merge(int idx, node *& root)
 	// Pulling a key from the current node and inserting it into (t-1)th
 	// position of C[idx]
 	child->keys[root->t-1] = root->keys[idx];
+	child->data[root->t - 1] = root->data[idx];
 
 	// Copying the keys from C[idx+1] to C[idx] at the end
 	for (int i=0; i<sibling->n; ++i)
+	{
 		child->keys[i+root->t] = sibling->keys[i];
-
+		child->data[i+root->t] = sibling->data[i];
+	}
 	// Copying the child pointers from C[idx+1] to C[idx]
 	if (!child->leaf)
 	{
@@ -376,8 +424,10 @@ void Btree<T>::merge(int idx, node *& root)
 	// Moving all keys after idx in the current node one step before -
 	// to fill the gap created by moving keys[idx] to C[idx]
 	for (int i=idx+1; i<root->n; ++i)
+	{
 		root->keys[i-1] = root->keys[i];
-
+		root->data[i-1] = root->data[i];
+	}
 	// Moving the child pointers after (idx+1) in the current node one
 	// step before
 	for (int i=idx+2; i<=root->n; ++i)
@@ -403,6 +453,7 @@ void Btree<T>::borrowFromNext(int idx, node *& root)
 
 	// keys[idx] is inserted as the last key in C[idx]
 	child->keys[(child->n)] = root->keys[idx];
+	child->data[(child->n)] = root->data[idx];
 
 	// Sibling's first child is inserted as the last child
 	// into C[idx]
@@ -411,11 +462,13 @@ void Btree<T>::borrowFromNext(int idx, node *& root)
 
 	//The first key from sibling is inserted into keys[idx]
 	root->keys[idx] = sibling->keys[0];
-
+	root->data[idx] = sibling->data[0];
 	// Moving all keys in sibling one step behind
 	for (int i=1; i < sibling->n; ++i)
+	{
 		sibling->keys[i-1] = sibling->keys[i];
-
+		sibling->data[i-1] = sibling->data[i];
+	}
 	// Moving the child pointers one step behind
 	if (!sibling->leaf)
 	{
@@ -446,8 +499,10 @@ void Btree<T>::borrowFromPrev(int idx, node *& root)
 
 	// Moving all key in C[idx] one step ahead
 	for (int i=child->n-1; i>=0; --i)
+	{
 		child->keys[i+1] = child->keys[i];
-
+		child->data[i+1] = child->data[i];
+	}
 	// If C[idx] is not a leaf, move all its child pointers one step ahead
 	if (!child->leaf)
 	{
@@ -457,7 +512,7 @@ void Btree<T>::borrowFromPrev(int idx, node *& root)
 
 	// Setting child's first key equal to keys[idx-1] from the current node
 	child->keys[0] = root->keys[idx-1];
-
+	child->data[0] = root->data[idx-1];
 	// Moving sibling's last child as C[idx]'s first child
 	if(!child->leaf)
 		child->C[0] = sibling->C[sibling->n];
@@ -465,7 +520,7 @@ void Btree<T>::borrowFromPrev(int idx, node *& root)
 	// Moving the key from the sibling to the parent
 	// This reduces the number of keys in the sibling
 	root->keys[idx-1] = sibling->keys[sibling->n-1];
-
+	root->data[idx-1] = sibling->data[sibling->n -1];
 	child->n += 1;
 	sibling->n -= 1;
 
@@ -498,5 +553,18 @@ void Btree<T>::fill(int idx,node *& root)
 			merge(idx-1,root);
 	}
 	return;
+}
+
+template <typename T>
+long int Btree<T>::count_digit(long int number) {
+   int count = 0;
+
+
+   while(number != 0) {
+      number = number / 10;
+      count++;
+   }
+ 
+   return count;
 }
 
